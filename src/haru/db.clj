@@ -53,19 +53,24 @@ CREATE TABLE IF NOT EXISTS posts_to_boards_map(
                     :or {title ""
                          author "名無しさん"
                          text ""}}]
-  (if (and (empty? text)
-           (nil? image))
+
+  (cond
+    (and (empty? text)
+         (nil? image))
     (throw (java.lang.RuntimeException.
-            "Post must have either image or text")))
-  (if (and (nil? parent-id)
-           (nil? board-list))
+            "Post must have either image or text"))
+
+    (and (nil? parent-id)
+         (nil? board-list))
     (throw (java.lang.RuntimeException.
-            "Post must be a reply or have a board list")))
-  (if (and (not (nil? board-list))
-           (nil? image))
+            "Post must be a reply or have a board list"))
+
+    (and (not (nil? board-list))
+         (nil? image))
     (throw (java.lang.RuntimeException.
-            "First post in a thread must have an image")))
-  (if (and (not (nil? parent-id)) (not (nil? board-list)))
+            "First post in a thread must have an image"))
+
+    (and (not (nil? parent-id)) (not (nil? board-list)))
     (throw (java.lang.RuntimeException.
             "Post can't both be a reply and have a board list")))
 
