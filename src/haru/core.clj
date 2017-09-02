@@ -7,31 +7,47 @@
    [compojure.handler :refer [site]]
    [compojure.core :refer [defroutes GET context]]
 
-   [monger.core :as mg]
-   [monger.collection :as mc]
-   [monger.credentials :as mcr]
-   [monger.operators :refer :all]
+   [korma.db :refer :all]
+   [korma.core :refer :all]
    (:gen-class)))
 
-(def mongo-credits (mcr/create "haru" "admin" "haru"))
+(defdb db (postgres {:db "haru"
+                     :user "haru"
+                     :password "12345"}))
 
-(defn add-post [& {:keys [name author datetime text image]
-                   :or {author "Anon"
-                        datetime (java.util.Date.)
-                        name ""}} ]
-  (let [conn (mg/connect-with-credentials mongo-credits)
-        db (mg/get-db conn "haru")
-        id (-> (mc/find-and-modify db
-                               "ids"
-                               {:type "post"}
-                               {$inc {:id 1}}
-                               {:upsert true :return-new true})
-               :id)]
-    (mc/insert db "posts" {:name name
-                           :id id
-                           :author author
-                           :datetime datetime
-                           :text text})))
+(defn init-db []
+  (let [schema
+        ["
+CREATE TABLE IF NOT EXISTS posts(
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(64),
+  author VARCHAR(512),
+  text TEXT,
+  date TIMESTAMP WITHOUT TIME ZONE,
+  image TEXT,
+  parentid INTEGER);
+"]]
+    (map exec-raw schema)))
+
+(defentity posts
+  (pk :id))
+
+(defn db-save-post [& {:keys [title author text image parent-id]
+                       :or {title ""
+                            author "名無しさん"
+                            text ""}}]
+  (if (and (empty? text)
+           (nil? image))
+    (throw (java.lang.RuntimeException.
+            "Post must have either image or text")))
+  (insert posts
+          (values
+           {:title title
+            :author author
+            :text text
+            :date (java.sql.Timestamp. (.getTime (java.util.Date.)))
+            :image image
+            :parentid parent-id})))
 
 (defn comment-css []
   [:div.comment {:background-color (css-color/rgb 214 218 240)

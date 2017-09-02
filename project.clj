@@ -7,7 +7,8 @@
                  [hiccup "1.0.5"]
                  [garden "1.3.2"]
 
-                 [com.novemberain/monger "3.1.0"]]
+                 [org.postgresql/postgresql "42.1.4.jre7"]
+                 [korma "0.4.3"]]
   :main ^:skip-aot haru.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
